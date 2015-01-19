@@ -8,7 +8,7 @@ module.exports = function (router) {
         next();
     });
 
-    router.get('/foo', function (req, res) {
+    router.get('/foo', function *(next) {
         if (req.foo) {
             res.send(200, 'ok');
             return;

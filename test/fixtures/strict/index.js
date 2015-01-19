@@ -6,16 +6,16 @@
 //
 module.exports = function (router) {
 
-    router.get('/', function (req, res) {
-        res.send('ok');
+    router.get('/', function *(next) {
+        this.body = 'ok';
     });
 
-    router.get('/strict', function (req, res) {
-        res.send('ok');
+    router.get('/strict', function *(next) {
+        this.body = 'ok';
     });
 
-    router.get('/very-strict/', function (req, res) {
-        res.send('ok');
+    router.get('/very-strict/', function *(next) {
+        this.body = 'ok';
     });
 
 };

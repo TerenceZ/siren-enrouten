@@ -2,13 +2,11 @@
 
 module.exports = function (router) {
 
-    router.get("/", function *(next) {
+    router.get("my-foo", "/:id", function *(next) {
         this.body = 'ok';
     });
 
-
-
-    router.get("my-list", "/stuff", function *(next) {
+    router.get("my-bar", "/bar/:id/:action", function *(next) {
         this.body = 'ok';
     });
 };

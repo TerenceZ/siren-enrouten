@@ -1,25 +1,28 @@
 {
-  "name": "express-enrouten",
-  "version": "2.0.0-pre",
-  "description": "An express route initialization and configuration module.",
+  "name": "siren-enrouten",
+  "version": "1.0.0",
+  "description": "A koa route initialization and configuration module.",
   "main": "index.js",
   "scripts": {
-    "test": "tape test/*.js",
-    "cover": "istanbul cover tape -- test/*.js",
-    "lint": "jshint -c .jshintrc index.js lib/*.js"
+    "test": "NODE_ENV=test mocha --harmony --require should --reporter spec",
+    "test-win": "set NODE_ENV=test & mocha --harmony --require should --reporter spec",
+    "test-cov": "NODE_ENV=test node --harmony ./node_modules/.bin/istanbul cover ./node_modules/.bin/_mocha -- --require should",
+    "test-cov-win": "set NODE_ENV=test & node --harmony ./node_modules/istanbul-harmony/lib/cli cover ./node_modules/mocha/bin/_mocha -- --require should",
+    "test-travis": "NODE_ENV=test node --harmony ./node_modules/.bin/istanbul cover ./node_modules/.bin/_mocha --report lcovonly -- --require should"
   },
-  "repository": "git://github.com/krakenjs/express-enrouten.git",
-  "publishConfig": {
-    "registry": "https://registry.npmjs.org"
-  },
+  "repository": "git://github.com/TerenceZ/siren-enrouten.git",
+
   "keywords": [
-    "expressjs",
+    "koa",
     "node",
     "js",
     "javascript",
     "routing"
   ],
-  "author": "Erik Toth <ertoth@paypal.com>",
+  "author": [
+    "Erik Toth <ertoth@paypal.com>",
+    "TerenceZ <texvnars@gmail.com>"
+  ],
   "licenses": [
     {
       "type": "Apache 2.0",
@@ -27,15 +30,15 @@
     }
   ],
   "devDependencies": {
-    "express": "^4.10.3",
-    "istanbul": "^0.3.2",
-    "jshint": "^2.5.10",
-    "supertest": "^0.15.0",
-    "tape": "^3.0.3"
+    "istanbul-harmony": "^0.3.1",
+    "koa": "^0.14.0",
+    "mocha": "^2.1.0",
+    "should": "^4.4.2",
+    "supertest": "^0.15.0"
   },
   "dependencies": {
     "caller": "^1.0.0",
     "debuglog": "^1.0.1",
-    "reverend": "^0.3.0"
+    "siren-router": "^1.0.7"
   }
 }

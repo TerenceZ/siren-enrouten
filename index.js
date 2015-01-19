@@ -15,78 +15,144 @@
 │   See the License for the specific language governing permissions and       │
 │   limitations under the License.                                            │
 \*───────────────────────────────────────────────────────────────────────────*/
-'use strict';
+"use strict";
 
-var path = require('path');
-var caller = require('caller');
-var express = require('express');
-var reverend = require('reverend');
-var debug = require('debuglog')('enrouten');
-var index = require('./lib/index');
-var routes = require('./lib/routes');
-var registry = require('./lib/registry');
-var directory = require('./lib/directory');
+var path = require("path");
+var caller = require("caller");
+var Router = require("siren-router");
+var index = require("./lib/index");
+var routes = require("./lib/routes");
+var directory = require("./lib/directory");
+var debug = require("debuglog")("siren/enrouten");
+var assert = require("assert");
 
 
 /**
- * Creates the onmount handler used to process teh middelwarez
- * @param app the sacrificial express app to use.
- * @param options the configuration settings to use when scanning
- * @returns {Function}
+ * Expose module.
  */
-function mount(app, options) {
+module.exports = enrouten;
 
-    return function onmount(parent) {
-        var router,
-            routerOptions;
+/**
+ * Create a URL from a named route and data.
+ * @param app the koa app for which to generate the named route
+ * @param name the name of the route to generate
+ * @param params the object containing keys and values for the named replacements.
+ * @returns {String} the generated URL or undefined if no named route exists.
+ */
+module.exports.url = function url(app, name, params) {
 
-        // allow inherited options to be passed to created Routers
-        routerOptions = options.routerOptions || {};
+    var context = app.context;
+    if (context.enrouten && typeof context.enrouten.url === "function") {
+        return context.enrouten.url(name, params);
+    }
 
-        // Remove sacrificial express app and keep a
-        // copy of the currently registered items.
-        /// XXX: caveat emptor, private member
-        parent._router.stack.pop();
-        router = registry(app.mountpath, null, routerOptions);
+    return undefined;
+};
 
-        // Process the configuration, adding to the stack
-        if (typeof options.index === 'string') {
-            options.index = resolve(options.basedir, options.index);
-            index(router, options.index);
-        }
+/**
+ * The main entry point for this module. Creates middleware
+ * to be mounted to a parent application.
+ * @param app koa application
+ * @param options the configuration settings for this middleware instance
+ * @returns {Function} koa middleware
+ */
+function enrouten(app, options) {
 
-        if (typeof options.directory === 'string') {
-            options.directory = resolve(options.basedir, options.directory);
-            directory(router, options.directory, routerOptions);
-        }
+    options = options || {};
+    options.basedir = options.basedir || path.dirname(caller());
 
-        if (typeof options.routes === 'object') {
-            routes(router, options.routes);
-        }
+    // allow inherited options to be passed to created Routers
+    var routerOptions = options.routerOptions || {};
+    var router = new Router(routerOptions);
+    var namedRoutes = {};
+    var mountpath = (!options.mountpath || options.mountpath === "/") ? "" : options.mountpath;
 
-        // Setup app locals for use in handlers.
-        parent.locals.enrouten = {
+    // Register a named path into `namedRoutes`.
+    function registerRoute(name, path) {
 
-            routes: router.routes,
+      assert(!namedRoutes.hasOwnProperty(name), "A route already exists for the name '" + name + "'");
+      debug("registering name %s for %s", name, path);
 
-            path: function path(name, data) {
-                var route;
-                route = this.routes[name];
-                if (typeof route === 'string') {
-                    return reverend(route, data || {});
+      namedRoutes[name] = path;
+    }
+
+    if (mountpath.slice(-1) === "/") {
+        mountpath = mountpath.slice(0, -1);
+    }
+
+    // Process the configuration, adding to the middleware
+    if (typeof options.index === "string") {
+        debug("resolving index", options.index);
+        options.index = resolve(options.basedir, options.index);
+        index(router, options.index);
+    }
+
+    if (typeof options.directory === "string") {
+        debug("resolving directory", options.directory);
+        options.directory = resolve(options.basedir, options.directory);
+        directory(router, registerRoute, options.directory, routerOptions);
+    }
+
+    if (typeof options.routes === "object") {
+        debug("resolving routes");
+        routes(router, options.routes);
+    }
+
+    // Register the named routes generated from `index` and `routes`.
+    router.routes.forEach(function (route) {
+
+      if (route.name) {
+        registerRoute(route.name, route.path);
+      }
+    });
+
+    // Create enrouten context.
+    app.context.enrouten = {
+
+        routes: namedRoutes,
+
+        mountpath: mountpath,
+
+        /**
+         * Generate URL using given `path` and `params`.
+         * @param {String} url
+         * @param {Object} params url parameters
+         * @return {String}
+         */
+        url: function url(name, params) {
+
+            var route = this.routes[name];
+            if (route) {
+              var args = params;
+              route = this.mountpath + route;
+
+              // Support the (key, value) object form.
+              if (typeof params !== "object") {
+                args = Array.prototype.slice.call(arguments, 1);
+              }
+
+              if (Array.isArray(args)) {
+                for (var i = -1, l = args.length; ++i < l;) {
+                  route = route.replace(/:[^\/]+/, args[i]);
                 }
-                return undefined;
+
+              } else {
+                for (var key in args) {
+                  route = route.replace(":" + key, args[key]);
+                }
+              }
+
+              return route.split("/").map(function (component) {
+                return encodeURIComponent(component);
+              }).join("/");
             }
 
-        };
-
-        debug('mounting routes at', app.mountpath);
-        debug(router.routes);
-        parent.use(app.mountpath, router._router);
+            return undefined;
+        }
     };
 
+    return router.middleware();
 }
-
 
 /**
  * Resolves the provide basedir and file, returning
@@ -96,47 +162,9 @@ function mount(app, options) {
  * @returns {String} the resolved absolute file path.
  */
 function resolve(basedir, file) {
+
     if (path.resolve(file) === file) {
-        // absolute path
         return file;
     }
     return path.join(basedir, file);
 }
-
-
-/**
- * The main entry point for this module. Creates middleware
- * to be mounted to a parent application.
- * @param options the configuration settings for this middleware instance
- * @returns {Function} express middleware
- */
-function enrouten(options) {
-    var app;
-
-    options = options || {};
-    options.basedir = options.basedir || path.dirname(caller());
-
-    app = express();
-    app.once('mount', mount(app, options));
-
-    return app;
-}
-
-
-/**
- * Create a URL from a named route and data.
- * @param app the express app for which to generate the named route
- * @param name the name of the route to generate
- * @param data the object containing keys and values for the named replacements.
- * @returns {String} the generated URL or undefined if no named route exists.
- */
-enrouten.path = function path(app, name, data) {
-    var locals = app.locals;
-    if (locals.enrouten && typeof locals.enrouten.path === 'function') {
-        return locals.enrouten.path(name, data);
-    }
-    return undefined;
-};
-
-
-module.exports = enrouten;

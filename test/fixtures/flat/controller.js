@@ -3,8 +3,8 @@
 
 module.exports = function (router) {
 
-    router.get('/', function (req, res) {
-        res.send('ok');
+    router.get('/', function *() {
+        this.body = 'ok';
     });
 
 };

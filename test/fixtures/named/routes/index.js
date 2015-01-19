@@ -1,22 +1,16 @@
-'use strict';
-
+"use strict";
 
 module.exports = function (router) {
 
+    router.get("my-foo", "/", function *(next) {
+        this.body = 'ok';
+    });
 
-    router({ path: '/', name: 'my-foo' })
-        .get(function (req, res) {
-            res.send('ok');
-        });
+    router.get("my-bar", "/bar", function *(next) {
+        this.body = 'ok';
+    });
 
-    router({ path: '/bar', name: 'my-bar' })
-        .get(function (req, res) {
-            res.send('ok');
-        });
-
-    router({ path: '/bar/:id', name: 'the-bar' })
-        .get(function (req, res) {
-            res.send('ok');
-        });
-
+    router.get("the-bar", "/bar/:id", function *(next) {
+        this.body = 'ok';
+    });
 };
