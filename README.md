@@ -1,7 +1,7 @@
 siren-enrouten
 ==========
 
-A Route configuration middleware for [koa]((https://github.com/koajs/koa)
+A Route configuration middleware for [koa](https://github.com/koajs/koa), and this is based on [express-enrouten](https://github.com/krakenjs/express-enrouten).
 
 =======
 [![Build Status](https://travis-ci.org/TerenceZ/siren-enrouten.png)](https://travis-ci.org/TerenceZ/siren-enrouten)   
