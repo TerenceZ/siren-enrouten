@@ -48,8 +48,13 @@ For `index` and `directory` configurations there is also support for named route
 When you use named routes by the passed siren-router instance, enrouten will fetch
 the named routes out and you can get the named url by `ctx.enrouten.url` or `enrouten.url`.
 For example:
+
 ```javascript
-// File1.js
+var enrouten = require('siren-enrouten');
+app.use(enrouten(app));
+```
+
+```javascript
 var enrouten = require('siren-enrouten');
 
 module.exports = function (router) {
