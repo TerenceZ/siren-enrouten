@@ -181,9 +181,9 @@ function run(name, mount, fn) {
                 should.exist(app.context.enrouten);
                 app.context.enrouten.url.should.be.a.Function;
                 app.context.enrouten.mountpath.should.equal(mount);
-                app.context.enrouten.routes["my-foo"].should.equal("/");
-                app.context.enrouten.routes["my-bar"].should.equal("/bar");
-                app.context.enrouten.routes["my-list"].should.equal("/list/stuff");
+                app.context.enrouten.routes["my-foo"].should.equal(mount ? mount : "/");
+                app.context.enrouten.routes["my-bar"].should.equal(mount + "/bar");
+                app.context.enrouten.routes["my-list"].should.equal(mount + "/list/stuff");
 
                 get(app, mount + "/", doneIfError(done));
                 get(app, mount + "/list", doneIfError(done));
@@ -295,8 +295,8 @@ function run(name, mount, fn) {
                 should.exist(app.context.enrouten);
                 app.context.enrouten.url.should.be.a.Function;
                 app.context.enrouten.mountpath.should.equal(mount);
-                app.context.enrouten.routes["my-foo"].should.equal("/");
-                app.context.enrouten.routes["my-bar"].should.equal("/bar");
+                app.context.enrouten.routes["my-foo"].should.equal(mount ? mount : "/");
+                app.context.enrouten.routes["my-bar"].should.equal(mount + "/bar");
 
                 get(app, mount + "/", doneIfError(done));
                 get(app, mount + "/bar", done);

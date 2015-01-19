@@ -49,6 +49,7 @@ module.exports.url = function url(app, name, params) {
     return undefined;
 };
 
+
 /**
  * The main entry point for this module. Creates middleware
  * to be mounted to a parent application.
@@ -67,8 +68,17 @@ function enrouten(app, options) {
     var namedRoutes = {};
     var mountpath = (!options.mountpath || options.mountpath === "/") ? "" : options.mountpath;
 
+    if (mountpath.slice(-1) === "/") {
+        mountpath = mountpath.slice(0, -1);
+    }
+
     // Register a named path into `namedRoutes`.
     function registerRoute(name, path) {
+
+      path = mountpath + path;
+      if (path.length > 1 && path.slice(-1) === "/") {
+        path = path.slice(0, -1);
+      }
 
       assert(!namedRoutes.hasOwnProperty(name), "A route already exists for the name '" + name + "'");
       debug("registering name %s for %s", name, path);
@@ -76,29 +86,26 @@ function enrouten(app, options) {
       namedRoutes[name] = path;
     }
 
-    if (mountpath.slice(-1) === "/") {
-        mountpath = mountpath.slice(0, -1);
-    }
-
     // Process the configuration, adding to the middleware
     if (typeof options.index === "string") {
         debug("resolving index", options.index);
-        options.index = resolve(options.basedir, options.index);
-        index(router, options.index);
+
+        index(router, resolve(options.basedir, options.index));
     }
 
     if (typeof options.directory === "string") {
         debug("resolving directory", options.directory);
-        options.directory = resolve(options.basedir, options.directory);
-        directory(router, registerRoute, options.directory, routerOptions);
+
+        directory(router, registerRoute, resolve(options.basedir, options.directory), routerOptions);
     }
 
     if (typeof options.routes === "object") {
         debug("resolving routes");
+        
         routes(router, options.routes);
     }
 
-    // Register the named routes generated from `index` and `routes`.
+    // Register the named routes generated from `index`.
     router.routes.forEach(function (route) {
 
       if (route.name) {
@@ -124,7 +131,6 @@ function enrouten(app, options) {
             var route = this.routes[name];
             if (route) {
               var args = params;
-              route = this.mountpath + route;
 
               // Support the (key, value) object form.
               if (typeof params !== "object") {
