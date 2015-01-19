@@ -28,7 +28,7 @@ var app = require('koa'),
 var app = koa();
 app.use(mount('/foo', enrouten(app, { mountpath: '/foo' })));
 ```
-Otherwise, when you use `enrouten.url`, it will return a unmounted url.
+Otherwise, when you use `enrouten.url`, it will return an unmounted url.
 
 #### routerOptions
 The `routerOptions` configuration option (optional) allows additional options to be
@@ -45,7 +45,7 @@ app.use(enrouten(app, {
 
 ### Named Routes
 For `index` and `directory` configurations there is also support for named routes.
-When you use named routes by the passed siren-router instance, enrouten will fetched
+When you use named routes by the passed siren-router instance, enrouten will fetch
 the named routes out and you can get the named url by `ctx.enrouten.url` or `enrouten.url`.
 For example:
 ```javascript
